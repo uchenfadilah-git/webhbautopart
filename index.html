@@ -95,6 +95,10 @@
             <option value="price-high">Price high</option>
           </select>
         </label>
+        <label class="select-box currency-box">
+          <i data-lucide="circle-dollar-sign"></i>
+          <select id="currencySelect" aria-label="Display currency"></select>
+        </label>
       </section>
 
       <section class="catalog-head" id="catalog">
@@ -123,14 +127,15 @@
             <h4>Price Range</h4>
             <div class="price-range">
               <label>
-                <span>Min IDR</span>
+                <span id="priceMinLabel">Min IDR</span>
                 <input id="priceMin" type="number" min="0" step="1000" placeholder="0" />
               </label>
               <label>
-                <span>Max IDR</span>
+                <span id="priceMaxLabel">Max IDR</span>
                 <input id="priceMax" type="number" min="0" step="1000" placeholder="9999999" />
               </label>
             </div>
+            <p id="currencyNote" class="currency-note">Prices shown in IDR.</p>
           </div>
         </aside>
         <section id="productGrid" class="product-grid" aria-live="polite"></section>

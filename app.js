@@ -10,6 +10,80 @@ const partRules = [
   ["Wheel", /\b(wheel|tire|tyre|rim|hub)\b/i],
 ];
 
+const currencies = [
+  ["IDR", "Indonesia"],
+  ["USD", "United States"],
+  ["EUR", "Eurozone"],
+  ["GBP", "United Kingdom"],
+  ["CHF", "Switzerland"],
+  ["JPY", "Japan"],
+  ["AUD", "Australia"],
+  ["NZD", "New Zealand"],
+  ["CAD", "Canada"],
+  ["SGD", "Singapore"],
+  ["MYR", "Malaysia"],
+  ["THB", "Thailand"],
+  ["PHP", "Philippines"],
+  ["VND", "Vietnam"],
+  ["CNY", "China"],
+  ["HKD", "Hong Kong"],
+  ["KRW", "South Korea"],
+  ["INR", "India"],
+  ["AED", "United Arab Emirates"],
+  ["SAR", "Saudi Arabia"],
+  ["ILS", "Israel"],
+  ["TRY", "Turkey"],
+  ["SEK", "Sweden"],
+  ["NOK", "Norway"],
+  ["DKK", "Denmark"],
+  ["PLN", "Poland"],
+  ["CZK", "Czech Republic"],
+  ["HUF", "Hungary"],
+  ["RON", "Romania"],
+  ["BGN", "Bulgaria"],
+  ["ISK", "Iceland"],
+  ["BRL", "Brazil"],
+  ["MXN", "Mexico"],
+  ["ZAR", "South Africa"],
+];
+
+const fallbackRates = {
+  IDR: 1,
+  USD: 0.000056,
+  EUR: 0.000049,
+  GBP: 0.000043,
+  CHF: 0.000046,
+  JPY: 0.00909,
+  AUD: 0.00008,
+  NZD: 0.00009,
+  CAD: 0.000077,
+  SGD: 0.000072,
+  MYR: 0.00023,
+  THB: 0.0018,
+  PHP: 0.0032,
+  VND: 1.47,
+  CNY: 0.0004,
+  HKD: 0.00044,
+  KRW: 0.078,
+  INR: 0.0048,
+  AED: 0.00021,
+  SAR: 0.00021,
+  ILS: 0.00019,
+  TRY: 0.0023,
+  SEK: 0.00054,
+  NOK: 0.00057,
+  DKK: 0.00037,
+  PLN: 0.00021,
+  CZK: 0.0012,
+  HUF: 0.02,
+  RON: 0.00025,
+  BGN: 0.000096,
+  ISK: 0.007,
+  BRL: 0.00031,
+  MXN: 0.0011,
+  ZAR: 0.001,
+};
+
 function inferKind(title) {
   if (/\b(oem|genuine)\b/i.test(title)) return "Genuine";
   if (/\b(brt|tdr|racing|race)\b/i.test(title)) return "Racing";
@@ -48,6 +122,10 @@ const state = {
   priceMin: "",
   priceMax: "",
   sort: "featured",
+  currency: localStorage.getItem("hbap-currency") || "IDR",
+  rates: { ...fallbackRates },
+  rateDate: "",
+  ratesLive: false,
 };
 
 const grid = document.querySelector("#productGrid");
@@ -56,17 +134,87 @@ const totalProducts = document.querySelector("#totalProducts");
 const searchInput = document.querySelector("#searchInput");
 const navSearchInput = document.querySelector("#navSearchInput");
 const sortSelect = document.querySelector("#sortSelect");
+const currencySelect = document.querySelector("#currencySelect");
 const brandGroup = document.querySelector("#brandChips");
 const categoryList = document.querySelector("#categoryList");
 const kindList = document.querySelector("#kindList");
 const priceMin = document.querySelector("#priceMin");
 const priceMax = document.querySelector("#priceMax");
+const priceMinLabel = document.querySelector("#priceMinLabel");
+const priceMaxLabel = document.querySelector("#priceMaxLabel");
+const currencyNote = document.querySelector("#currencyNote");
 const clearFilters = document.querySelector("#clearFilters");
 const dialog = document.querySelector("#productDialog");
 const dialogContent = document.querySelector("#dialogContent");
 
 function setIcon() {
   if (window.lucide) window.lucide.createIcons();
+}
+
+function selectedRate() {
+  return state.rates[state.currency] || 1;
+}
+
+function convertedValue(idrValue) {
+  return idrValue * selectedRate();
+}
+
+function filterValueToIdr(value) {
+  if (!value) return 0;
+  return Number(value) / selectedRate();
+}
+
+function formatMoney(idrValue) {
+  if (!idrValue) return "See eBay price";
+  const value = convertedValue(idrValue);
+  const maximumFractionDigits = value >= 1000 || state.currency === "IDR" ? 0 : 2;
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: state.currency,
+    maximumFractionDigits,
+  }).format(value);
+}
+
+function basePriceText(product) {
+  return state.currency === "IDR" ? "" : `<span class="base-price">${product.price}</span>`;
+}
+
+function renderCurrencyOptions() {
+  currencySelect.replaceChildren();
+  for (const [code, country] of currencies) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = `${code} - ${country}`;
+    currencySelect.appendChild(option);
+  }
+  currencySelect.value = state.currency;
+}
+
+function updateCurrencyLabels() {
+  const code = state.currency;
+  priceMinLabel.textContent = `Min ${code}`;
+  priceMaxLabel.textContent = `Max ${code}`;
+  const dateText = state.rateDate ? ` Rates: ${state.rateDate}.` : "";
+  currencyNote.textContent = state.ratesLive
+    ? `Prices shown in ${code}.${dateText}`
+    : `Prices shown in ${code}. Live rates unavailable, using fallback.`;
+}
+
+async function loadRates() {
+  try {
+    const response = await fetch("https://open.er-api.com/v6/latest/IDR");
+    if (!response.ok) throw new Error(`Rates ${response.status}`);
+    const payload = await response.json();
+    if (payload.result !== "success" || !payload.rates) throw new Error("Rates unavailable");
+    state.rates = { ...fallbackRates, ...payload.rates, IDR: 1 };
+    state.rateDate = payload.time_last_update_utc ? payload.time_last_update_utc.slice(0, 16) : "";
+    state.ratesLive = true;
+  } catch {
+    state.rates = { ...fallbackRates };
+    state.ratesLive = false;
+  }
+  updateCurrencyLabels();
+  renderProducts();
 }
 
 function countBy(key) {
@@ -128,8 +276,8 @@ function productMatches(product) {
   const brandMatches = state.brand === "all" || product.brand === state.brand;
   const partMatches = state.partType === "all" || product.partType === state.partType;
   const kindMatches = state.kind === "all" || product.kind === state.kind;
-  const minMatches = !state.priceMin || product.priceNumber >= Number(state.priceMin);
-  const maxMatches = !state.priceMax || product.priceNumber <= Number(state.priceMax);
+  const minMatches = !state.priceMin || product.priceNumber >= filterValueToIdr(state.priceMin);
+  const maxMatches = !state.priceMax || product.priceNumber <= filterValueToIdr(state.priceMax);
   const queryMatches = !state.query || product.searchText.includes(state.query.toLowerCase());
   return brandMatches && partMatches && kindMatches && minMatches && maxMatches && queryMatches;
 }
@@ -165,7 +313,7 @@ function productCard(product) {
         <span>${product.partType}</span>
       </div>
       <h3><a href="#/product/${product.id}">${product.title}</a></h3>
-      <div class="price">${product.price || "See eBay price"}</div>
+      <div class="price">${formatMoney(product.priceNumber)}${basePriceText(product)}</div>
       <div class="mini-meta">
         <span><i data-lucide="shield-check"></i> eBay checkout</span>
         <span>#${product.id}</span>
@@ -215,7 +363,7 @@ function openProduct(product, updateHash = true) {
           <span class="badge">${product.partType}</span>
         </div>
         <h2>${product.title}</h2>
-        <div class="price">${product.price || "See eBay price"}</div>
+        <div class="price">${formatMoney(product.priceNumber)}${basePriceText(product)}</div>
         <dl class="spec-list">
           <div><dt>Item ID</dt><dd>${product.id}</dd></div>
           <div><dt>Seller</dt><dd>HBAutoPartShop</dd></div>
@@ -282,12 +430,21 @@ renderChips(
 );
 renderFilterList(categoryList, "partType", sortedValues("partType", partRules.map(([name]) => name)));
 renderFilterList(kindList, "kind", sortedValues("kind", ["Genuine", "Racing", "Aftermarket", "Parts"]));
+renderCurrencyOptions();
+updateCurrencyLabels();
 
 searchInput.addEventListener("input", (event) => syncSearch(event.target.value));
 navSearchInput.addEventListener("input", (event) => syncSearch(event.target.value));
 
 sortSelect.addEventListener("change", (event) => {
   state.sort = event.target.value;
+  renderProducts();
+});
+
+currencySelect.addEventListener("change", (event) => {
+  state.currency = event.target.value;
+  localStorage.setItem("hbap-currency", state.currency);
+  updateCurrencyLabels();
   renderProducts();
 });
 
@@ -334,3 +491,4 @@ window.addEventListener("hashchange", openRoute);
 
 renderProducts();
 openRoute();
+loadRates();

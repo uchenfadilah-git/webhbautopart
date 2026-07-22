@@ -257,7 +257,7 @@ h1 {
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto auto;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto;
   gap: 12px;
   padding: 10px;
   background: var(--panel);
@@ -276,6 +276,10 @@ h1 {
   background: var(--soft);
   border: 1px solid var(--line);
   border-radius: 8px;
+}
+
+.currency-box {
+  min-width: 150px;
 }
 
 .search-box input,
@@ -552,6 +556,21 @@ h1 {
   font-size: 14px;
   font-weight: 900;
   color: var(--accent-dark);
+}
+
+.base-price {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.currency-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .mini-meta {
