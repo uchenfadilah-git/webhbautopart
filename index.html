@@ -23,6 +23,15 @@
             <small>Official catalog</small>
           </span>
         </a>
+        <label class="nav-search">
+          <i data-lucide="search"></i>
+          <input id="navSearchInput" type="search" placeholder="Search parts" autocomplete="off" />
+        </label>
+        <div class="nav-links">
+          <a href="#catalog">All Products</a>
+          <a href="#about">About</a>
+          <a href="https://www.ebay.com/cnt/intermediatedFAQ?requested=hbautopartshop" target="_blank" rel="noopener">Contact</a>
+        </div>
         <div class="nav-actions">
           <a class="icon-link" href="https://www.ebay.com/str/hbautopartshop" target="_blank" rel="noopener">
             <i data-lucide="store"></i>
@@ -41,11 +50,30 @@
           <p>
             Browse official inventory from our eBay store. Select a part, check details, then complete checkout securely on eBay.
           </p>
-          <div class="hero-stats">
+          <div class="hero-stats" id="about">
             <span><strong id="totalProducts">0</strong> listed parts</span>
             <span><strong>100%</strong> positive feedback</span>
             <span><strong>Global</strong> shipping ready</span>
           </div>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Shopping assurance">
+        <div>
+          <i data-lucide="shield-check"></i>
+          <span>Secure checkout via eBay</span>
+        </div>
+        <div>
+          <i data-lucide="truck"></i>
+          <span>International shipping options</span>
+        </div>
+        <div>
+          <i data-lucide="badge-check"></i>
+          <span>100% positive feedback</span>
+        </div>
+        <div>
+          <i data-lucide="rotate-ccw"></i>
+          <span>Buyer protection on eBay</span>
         </div>
       </section>
 
@@ -54,13 +82,14 @@
           <i data-lucide="search"></i>
           <input id="searchInput" type="search" placeholder="Search part, model, or part number" autocomplete="off" />
         </label>
-        <div class="control-group" aria-label="Brand filters">
+        <div class="control-group" id="brandChips" aria-label="Brand filters">
           <button class="chip active" data-brand="all" type="button">All</button>
         </div>
         <label class="select-box">
           <i data-lucide="arrow-up-down"></i>
           <select id="sortSelect" aria-label="Sort products">
             <option value="featured">Featured</option>
+            <option value="newest">Newest</option>
             <option value="title">Name A-Z</option>
             <option value="price-low">Price low</option>
             <option value="price-high">Price high</option>
@@ -68,12 +97,44 @@
         </label>
       </section>
 
-      <section class="catalog-head">
-        <h2>Parts Catalog</h2>
+      <section class="catalog-head" id="catalog">
+        <div>
+          <p class="section-kicker">Marketplace catalog</p>
+          <h2>Parts Catalog</h2>
+        </div>
         <p id="resultCount">Loading products...</p>
       </section>
 
-      <section id="productGrid" class="product-grid" aria-live="polite"></section>
+      <section class="catalog-layout">
+        <aside class="filters" aria-label="Catalog filters">
+          <div class="filter-head">
+            <h3>Filters</h3>
+            <button id="clearFilters" type="button">Clear</button>
+          </div>
+          <div class="filter-block">
+            <h4>Category</h4>
+            <div id="categoryList" class="filter-list"></div>
+          </div>
+          <div class="filter-block">
+            <h4>Product Type</h4>
+            <div id="kindList" class="filter-list"></div>
+          </div>
+          <div class="filter-block">
+            <h4>Price Range</h4>
+            <div class="price-range">
+              <label>
+                <span>Min IDR</span>
+                <input id="priceMin" type="number" min="0" step="1000" placeholder="0" />
+              </label>
+              <label>
+                <span>Max IDR</span>
+                <input id="priceMax" type="number" min="0" step="1000" placeholder="9999999" />
+              </label>
+            </div>
+          </div>
+        </aside>
+        <section id="productGrid" class="product-grid" aria-live="polite"></section>
+      </section>
     </main>
 
     <dialog id="productDialog" class="product-dialog">
