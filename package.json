@@ -1,0 +1,10 @@
+{
+  "name": "hbautopartshop-catalog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape": "node scrape-store.mjs",
+    "start": "node server.mjs"
+  }
+}
